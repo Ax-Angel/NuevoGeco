@@ -1,6 +1,7 @@
 from rest_framework import serializers
-from .models import File
-class FileSerializer(serializers.ModelSerializer):
+from .models import Document, NormalProject, NormalMetadata, ParallelRelation, ParallelProject, ParallelMetadata
+
+class DocumentSerializer(serializers.ModelSerializer):
     class Meta():
-        model = File
-        fields = ('file', 'remark', 'timestamp')
+        model = Document
+        fields = ('file', 'name', 'timestamp')

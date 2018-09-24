@@ -36,6 +36,7 @@ whitenoise = "*"
 psutil = "*"
 ipython = "*"
 "psycopg2-binary" = "*"
+djangorestframework-jwt = "*"
 
 [requires]
 python_version = "3.6"
