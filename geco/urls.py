@@ -12,7 +12,7 @@ urlpatterns = [
     url(r'^api-token-auth/', obtain_jwt_token),
     url(r'api-token-refresh/', refresh_jwt_token),
     url(r'^jsreverse/$', django_js_reverse.views.urls_js, name='js_reverse'),
-    url(r'^subir/', include('subirarchivos.urls')),
+    url(r'^gestion/', include('subirarchivos.urls')),
 
     url(r'^$', TemplateView.as_view(template_name='exampleapp/itworks.html'), name='home'),
 ]
