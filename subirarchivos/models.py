@@ -15,6 +15,12 @@ class NormalProject(models.Model):
     def get_project_members(self):
         return self.project_members
 
+    def get_owner(self):
+        return self.owner
+
+    def set_status(self, status):
+        self.status=status
+
     def __str__(self):
         return str(self.name)
 

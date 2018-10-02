@@ -1,7 +1,7 @@
 from django.conf.urls import url
 from .views import *
 urlpatterns = [
-    url(r'^upload/$', DocumentView.as_view(), name='file-upload'),
+    url(r'^upload1/$', DocumentView.as_view(), name='file-upload'),
     url(r'^registro-usuario/$', CreateUserView.as_view(), name='register-user'),
     url(r'^crear-proyecto-normal/$', NormalProjectView.as_view(), name='normal-project-creation'),
     url(r'^crear-md-proyecto-nor/$', NormalMetadataView.as_view(), name='crear-md-proyecto-nor'),
@@ -10,4 +10,13 @@ urlpatterns = [
     url(r'^rel-doc-metadato/$', DocNormalMetaRelationView.as_view(), name='rel-doc-metadato'),
     url(r'^rel-paralelo/$', ParallelRelationView.as_view(), name='rel-paralelo'),
     url(r'^rel-paral-rel-md/$', ParallelRelationView.as_view(), name='rel-paral-rel-md'),
+    url(r'^borrar-proyecto/$', RemoveNormalProjectView.as_view(), name='delete-project'),
+    url(r'^borrar-documento/$', RemoveDocumentView.as_view(), name='delete-document'),
+    url(r'^borrar-md-proyecto-nor/$', RemoveNormalMetadataView.as_view(), name='delete-md-project-nor'),
+    url(r'^borrar-proyecto-paralelo/$', RemoveParallelProjectView.as_view(), name='delete-parallel-project'),
+    url(r'^borrar-md-proyecto-par/$', RemoveParallelMetadataView.as_view(), name='delete-md-project-par'),
+    url(r'^borrar-doc-nor-meta-rel/$', RemoveDocNormalMetaRelationView.as_view(), name='delete-doc-nor-meta-rel'),
+    url(r'^borrar-doc-par-meta-rel/$', RemoveDocParallelMetaRelationView.as_view(), name='delete-doc-par-meta-rel'),
+    url(r'^borrar-rel-paralelo/$', RemoveParallelRelationView.as_view(), name='delete-rel-parallel'),
+    url(r'^cambiar-status-proy', ChangeStatusNormalProjectView.as_view(), name='cambiar-status-proy'),
 ]
