@@ -66,6 +66,6 @@ class ParallelMetadata(models.Model):
     project = models.ForeignKey(ParallelProject, related_name='project_parallelmetadata', on_delete=models.CASCADE)
 
 class DocumentParallelMetadaRelation(models.Model):#falta
-    metada = models.ForeignKey(ParallelMetadata, related_name="parallelmetadata", on_delete=models.CASCADE)
+    metadata = models.ForeignKey(ParallelMetadata, related_name="parallelmetadata", on_delete=models.CASCADE)
     relation = models.ForeignKey(ParallelRelation, related_name="relation", on_delete=models.CASCADE)
     data = models.CharField(max_length=20, blank=True, null=True)
