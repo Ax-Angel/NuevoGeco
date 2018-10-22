@@ -18,5 +18,6 @@ urlpatterns = [
     url(r'^borrar-doc-nor-meta-rel/$', RemoveDocNormalMetaRelationView.as_view(), name='delete-doc-nor-meta-rel'),
     url(r'^borrar-doc-par-meta-rel/$', RemoveRelationParallelMetaRelationView.as_view(), name='delete-doc-par-meta-rel'),
     url(r'^borrar-rel-paralelo/$', RemoveParallelRelationView.as_view(), name='delete-rel-parallel'),
-    url(r'^cambiar-status-proy', ChangeStatusNormalProjectView.as_view(), name='cambiar-status-proy'),
+    url(r'^cambiar-status-proyn', ChangeStatusNormalProjectView.as_view(), name='cambiar-status-proyn'),
+    url(r'^cambiar-status-proyp', ChangeStatusParallellProjectView.as_view(), name='cambiar-status-proyp'),
 ]
