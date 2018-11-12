@@ -170,7 +170,7 @@ class DocNormalMetaRelationView(APIView):
             users = projectObj.get_project_members().all()
             document = Document.objects.get(name = validatedData['document'], project = projectObj)
             metadata = NormalMetadata.objects.get(name = validatedData['metadata'])
-            if projectObj is not None and document is not None and metadata is not none:
+            if projectObj is not None and document is not None and metadata is not None:
                 if request.user in users.all():
                     relation = DocumentNormalMetadataRelation(metadata = metadata,
                                                                 document = document,
