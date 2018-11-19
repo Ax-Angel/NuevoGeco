@@ -84,4 +84,5 @@ class RemoveParallelRelationSerializer(serializers.Serializer):
 class ChangeStatusProjectSerializer(serializers.Serializer):
     project = serializers.CharField(max_length=20, allow_blank=False, trim_whitespace=True)
 
-
+class ListFilesProjectSerializer(serializers.Serializer):
+    project = serializers.CharField(max_length=20, allow_blank=False, trim_whitespace=True)
