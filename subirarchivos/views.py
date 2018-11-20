@@ -173,7 +173,7 @@ class DocNormalMetaRelationView(APIView):
             users = projectObj.get_project_members().all()
             document = Document.objects.get(name = validatedData['document'], project = projectObj)
             metadata = NormalMetadata.objects.get(name = validatedData['metadata'])
-            if projectObj is not None and document is not None and metadata is not none:
+            if projectObj is not None and document is not None and metadata is not None:
                 if request.user in users.all():
                     relation = DocumentNormalMetadataRelation(metadata = metadata,
                                                                 document = document,
@@ -496,7 +496,11 @@ class ChangeStatusParallellProjectView(APIView):
         else:
             return Response(ch_status_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+<<<<<<< HEAD
 class ListFilesProject(APIView):
+=======
+class ListFilesProjectView(APIView):
+>>>>>>> 1fad2c12f5add6e3f790bd383b78071f377d7966
     parser_classes = (MultiPartParser, FormParser)
     permission_classes = (IsAuthenticated, )
     def post(self, request, *args, **kwargs):
