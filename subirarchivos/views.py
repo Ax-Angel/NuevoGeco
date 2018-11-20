@@ -75,8 +75,11 @@ class DocumentView(APIView):
                                         project = projectObj,
 
                                         )
-                    doc.save()
-                    return Response(file_serializer.data, status=status.HTTP_201_CREATED)
+                    try:
+                        doc.save()
+                        return Response(file_serializer.data, status=status.HTTP_201_CREATED)
+                    except:
+                        return JsonResponse({"error": "El formato del archivo no es valido"}, status=status.HTTP_409_CONFLICT)
                 except IntegrityError as e:
                     return JsonResponse({"error": "El nombre del documento ya existe"}, status=status.HTTP_409_CONFLICT)
             else:
@@ -486,6 +489,30 @@ class ChangeStatusParallellProjectView(APIView):
                     else:
                         projectObj.set_status(True)
                         return Response(ch_status_serializer.data, status=status.HTTP_202_ACCEPTED)
+                else:
+                    return JsonResponse({"error": "El usuario no tiene permiso para realizar esta accion"}, status=status.HTTP_401_UNAUTHORIZED)
+            else:
+                return JsonResponse({"error": "El proyecto no fue encontrado"}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response(ch_status_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ListFilesProject(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+    permission_classes = (IsAuthenticated, )
+    def post(self, request, *args, **kwargs):
+        serializer = ListFilesProjectSerializer(data=request.data)
+        if serializer.is_valid():
+            validatedData = serializer.validated_data
+
+            projectObj = NormalProject.objects.get(name = str(validatedData['project']))
+            if projectObj:
+                users = projectObj.get_project_members().all()
+                if request.user in users.all():
+                    documents_set = Document.objects.filter(project = projectObj)
+                    documents = []
+                    for doc in documents_set:
+                        documents.append(doc.name)
+                    return JsonResponse({"Documentos": documents}, status=status.HTTP_202_ACCEPTED)
                 else:
                     return JsonResponse({"error": "El usuario no tiene permiso para realizar esta accion"}, status=status.HTTP_401_UNAUTHORIZED)
             else:

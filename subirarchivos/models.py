@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.db import models
-
+from .validators import validate_file_extension
 # Create your models here.
 class NormalProject(models.Model):
     name = models.CharField(max_length=20, null=False, unique=True)
@@ -25,7 +25,7 @@ class NormalProject(models.Model):
         return str(self.name)
 
 class Document(models.Model):
-    file = models.FileField(blank=False, null=False, upload_to='mediafiles/')
+    file = models.FileField(blank=False, null=False, upload_to='mediafiles/', validators=[validate_file_extension])
     name = models.CharField(max_length=20, null=False, unique=True)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL,related_name='owner_document', on_delete=models.CASCADE)
     project = models.ForeignKey(NormalProject, related_name='project_document', on_delete=models.CASCADE)
