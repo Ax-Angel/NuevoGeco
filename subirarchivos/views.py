@@ -31,7 +31,7 @@ class CreateUserView(APIView):
                 return JsonResponse({"error": "El nombre de usuario o correo ya existe"}, status=status.HTTP_409_CONFLICT)
 
         else:
-            return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(user_serializer.errors, status=status.HTTP_409_BAD_CONFLICT)
 
 
 class NormalProjectView(APIView):
@@ -53,6 +53,7 @@ class NormalProjectView(APIView):
             except IntegrityError as e:
                 return JsonResponse({"error": "El nombre del proyecto ya existe"}, status=status.HTTP_409_CONFLICT)
         else:
+            print("lalalalala")
             return Response(project_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class DocumentView(APIView):
@@ -65,7 +66,10 @@ class DocumentView(APIView):
             print(validatedData)
             print(request.user.id)
 
-            projectObj = NormalProject.objects.get(name = str(validatedData['project']))
+            try:
+                projectObj = NormalProject.objects.get(name = str(validatedData['project']))
+            except:
+                return JsonResponse({"error": "El proyecto no fue encontrado"}, status=status.HTTP_404_NOT_FOUND)
             users = projectObj.get_project_members().all()
             if request.user in users.all():
                 try:
@@ -97,7 +101,10 @@ class NormalMetadataView(APIView):
         if metadata_serializer.is_valid():
             validatedData = metadata_serializer.validated_data
 
-            projectObj = NormalProject.objects.get(name = str(validatedData['project']))
+            try:
+                projectObj = NormalProject.objects.get(name = str(validatedData['project']))
+            except:
+                return JsonResponse({"error": "El proyecto no fue encontrado"}, status=status.HTTP_404_NOT_FOUND)
             users = projectObj.get_project_members().all()
 
             if request.user in users.all():
@@ -169,10 +176,19 @@ class DocNormalMetaRelationView(APIView):
         if doc_meta_serializer.is_valid():
             validatedData = doc_meta_serializer.validated_data
 
-            projectObj = NormalProject.objects.get(name = str(validatedData['project']))
+            try:
+                projectObj = NormalProject.objects.get(name = str(validatedData['project']))
+            except:
+                return JsonResponse({"error": "El proyecto no fue encontrado"}, status=status.HTTP_404_NOT_FOUND)
             users = projectObj.get_project_members().all()
-            document = Document.objects.get(name = validatedData['document'], project = projectObj)
-            metadata = NormalMetadata.objects.get(name = validatedData['metadata'])
+            try:
+                document = Document.objects.get(name = validatedData['document'], project = projectObj)
+            except:
+                return JsonResponse({"error": "El documento no fue encontrado"}, status=status.HTTP_404_NOT_FOUND)
+            try:
+                metadata = NormalMetadata.objects.get(name = validatedData['metadata'])
+            except:
+                return JsonResponse({"error": "El metadato no fue encontrado"}, status=status.HTTP_404_NOT_FOUND)
             if projectObj is not None and document is not None and metadata is not None:
                 if request.user in users.all():
                     relation = DocumentNormalMetadataRelation(metadata = metadata,
@@ -256,13 +272,14 @@ class RemoveNormalProjectView(APIView):
         rm_project_serializer = RemoveNormalProjectSerializer(data=request.data)
         if rm_project_serializer.is_valid():
             validatedData = rm_project_serializer.validated_data
-
-            projectObj = NormalProject.objects.get(name = str(validatedData['name']))
-            owner = projectObj.get_owner().all()
-            if request.user in owner:
-                project = NormalProject.objects.get(name=validatedData['name'])
-                if project is not None:
-                    project.delete()
+            try:
+                projectObj = NormalProject.objects.get(name = str(validatedData['project']))
+            except:
+                return JsonResponse({"error": "El proyecto no fue encontrado"}, status=status.HTTP_404_NOT_FOUND)
+            owner = projectObj.get_owner()
+            if request.user == owner:
+                if projectObj is not None:
+                    projectObj.delete()
                     return Response(rm_project_serializer.data, status=status.HTTP_202_ACCEPTED)
                 else:
                     return JsonResponse({"error": "El proyecto no fue encontrado"}, status=status.HTTP_404_NOT_FOUND)
@@ -280,10 +297,16 @@ class RemoveDocumentView(APIView):
         if rm_file_serializer.is_valid():
             validatedData = rm_file_serializer.validated_data
 
-            projectObj = NormalProject.objects.get(name = str(validatedData['project']))
+            try:
+                projectObj = NormalProject.objects.get(name = str(validatedData['project']))
+            except:
+                return JsonResponse({"error": "El proyecto no fue encontrado"}, status=status.HTTP_404_NOT_FOUND)
             users = projectObj.get_project_members().all()
             if request.user in users.all():
-                doc = Document.objects.get(name=validatedData['name'])
+                try:
+                    doc = Document.objects.get(name=validatedData['name'])
+                except:
+                    return JsonResponse({"error": "El documento no fue encontrado"}, status=status.HTTP_404_NOT_FOUND)
                 if doc is not None:
                     doc.delete()
                     return Response(rm_file_serializer.data, status=status.HTTP_202_ACCEPTED)
@@ -304,11 +327,17 @@ class RemoveNormalMetadataView(APIView):
         if rm_metadata_serializer.is_valid():
             validatedData = rm_metadata_serializer.validated_data
 
-            projectObj = NormalProject.objects.get(name = str(validatedData['project']))
+            try:
+                projectObj = NormalProject.objects.get(name = str(validatedData['project']))
+            except:
+                return JsonResponse({"error": "El proyecto no fue encontrado"}, status=status.HTTP_404_NOT_FOUND)
             users = projectObj.get_project_members().all()
 
             if request.user in users.all():
-                metadata = NormalMetadata.objects.get(name=validatedData['name'])
+                try:
+                    metadata = NormalMetadata.objects.get(name=validatedData['name'])
+                except:
+                    return JsonResponse({"error": "El metadato no fue encontrado"}, status=status.HTTP_404_NOT_FOUND)
                 if metadata is not None:
                     metadata.delete()
                     return Response(rm_metadata_serializer.data, status=status.HTTP_202_ACCEPTED)
@@ -496,11 +525,7 @@ class ChangeStatusParallellProjectView(APIView):
         else:
             return Response(ch_status_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-<<<<<<< HEAD
-class ListFilesProject(APIView):
-=======
 class ListFilesProjectView(APIView):
->>>>>>> 1fad2c12f5add6e3f790bd383b78071f377d7966
     parser_classes = (MultiPartParser, FormParser)
     permission_classes = (IsAuthenticated, )
     def post(self, request, *args, **kwargs):

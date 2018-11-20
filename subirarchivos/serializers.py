@@ -48,7 +48,7 @@ class ParallelRelationParallelMetadataSerializer(serializers.Serializer):
     data = serializers.CharField(max_length=20, allow_blank=False, trim_whitespace=True)
 
 class RemoveNormalProjectSerializer(serializers.Serializer):
-    name = serializers.CharField(max_length=20, allow_blank=False, trim_whitespace=True)
+    project = serializers.CharField(max_length=20, allow_blank=False, trim_whitespace=True)
 
 class RemoveDocumentSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=20, allow_blank=False, trim_whitespace=True)

@@ -20,9 +20,5 @@ urlpatterns = [
     url(r'^borrar-rel-paralelo/$', RemoveParallelRelationView.as_view(), name='delete-rel-parallel'),
     url(r'^cambiar-status-proyn', ChangeStatusNormalProjectView.as_view(), name='cambiar-status-proyn'),
     url(r'^cambiar-status-proyp', ChangeStatusParallellProjectView.as_view(), name='cambiar-status-proyp'),
-<<<<<<< HEAD
-    url(r'^list-docs-proy', ListFilesProject.as_view(), name='list-docs-proy'),
-=======
     url(r'^list-docs-proy', ListFilesProjectView.as_view(), name='list-docs-proy'),
->>>>>>> 1fad2c12f5add6e3f790bd383b78071f377d7966
 ]
