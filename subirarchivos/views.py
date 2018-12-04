@@ -6,7 +6,13 @@ from django.db import IntegrityError
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from users.models import User
 from django.http import JsonResponse
+from django.core.files.storage import FileSystemStorage
+from django.conf import settings
+import traceback
+import sys
+import os
 
+from .functions import *
 from .serializers import *
 from .models import *
 
@@ -73,8 +79,23 @@ class DocumentView(APIView):
             users = projectObj.get_project_members().all()
             if request.user in users.all():
                 try:
-                    doc = Document(file = validatedData['file'],
-                                        name = str(validatedData['file']),
+
+                    file = validatedData['file']
+                    fs = FileSystemStorage()
+                    filename = fs.save(file.name, file)
+                    uploaded_file_url = settings.MEDIA_ROOT+'/'+filename
+                    print(uploaded_file_url)
+
+                    if str(filename).endswith('.pdf'):
+                        convert_to_utf8(uploaded_file_url)
+                        convert_to_txt(uploaded_file_url)
+                        os.remove(uploaded_file_url)
+                        filename = filename + ".txt"
+                    else:
+                        convert_to_utf8(uploaded_file_url)
+
+                    doc = Document(file = uploaded_file_url,
+                                        name = filename,
                                         owner = request.user,
                                         project = projectObj,
 
@@ -82,7 +103,8 @@ class DocumentView(APIView):
                     try:
                         doc.save()
                         return Response(file_serializer.data, status=status.HTTP_201_CREATED)
-                    except:
+                    except Exception:
+                        #print(traceback.format_exc())
                         return JsonResponse({"error": "El formato del archivo no es valido"}, status=status.HTTP_409_CONFLICT)
                 except IntegrityError as e:
                     return JsonResponse({"error": "El nombre del documento ya existe"}, status=status.HTTP_409_CONFLICT)
