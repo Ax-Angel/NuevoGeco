@@ -570,3 +570,45 @@ class ListFilesProjectView(APIView):
                 return JsonResponse({"error": "El proyecto no fue encontrado"}, status=status.HTTP_404_NOT_FOUND)
         else:
             return Response(ch_status_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ListProyectsOwnView(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+    permission_classes = (IsAuthenticated, )
+    def post(self, request, *args, **kwargs):
+        serializer = ListProyectsOwnSerializer(data=request.data)
+        if serializer.is_valid():
+            validatedData = serializer.validated_data
+
+            projects = NormalProject.objects.filter(owner=request.user)
+
+            if projects:
+                try:
+                    response = [{'name': project.name} for project in projects]
+                    return Response(response, status=status.HTTP_202_ACCEPTED)
+                except:
+                    return JsonResponse({"error": "error procesando"}, status.HTTP_404_NOT_FOUND)
+            else:
+                return JsonResponse({"name": "null"}, status.HTTP_404_NOT_FOUND)
+        else:
+            return Response(ch_status_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ListProyectsColView(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+    permission_classes = (IsAuthenticated, )
+    def post(self, request, *args, **kwargs):
+        serializer = ListProyectsColSerializer(data=request.data)
+        if serializer.is_valid():
+            validatedData = serializer.validated_data
+
+            projects = NormalProject.objects.filter(project_members=request.user).exclude(owner=request.user)
+
+            if projects:
+                try:
+                    response = [{'name': project.name} for project in projects]
+                    return Response(response, status=status.HTTP_202_ACCEPTED)
+                except:
+                    return JsonResponse({"error": "error procesando"}, status.HTTP_404_NOT_FOUND)
+            else:
+                return JsonResponse({"name": "null"}, status.HTTP_404_NOT_FOUND)
+        else:
+            return Response(ch_status_serializer.errors, status=status.HTTP_400_BAD_REQUEST)

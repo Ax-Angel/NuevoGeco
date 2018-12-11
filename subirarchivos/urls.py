@@ -21,4 +21,6 @@ urlpatterns = [
     url(r'^cambiar-status-proyn', ChangeStatusNormalProjectView.as_view(), name='cambiar-status-proyn'),
     url(r'^cambiar-status-proyp', ChangeStatusParallellProjectView.as_view(), name='cambiar-status-proyp'),
     url(r'^list-docs-proy', ListFilesProjectView.as_view(), name='list-docs-proy'),
+    url(r'^list-proy-own', ListProyectsOwnView.as_view(), name='list-proy-own'),
+    url(r'^list-proy-col', ListProyectsColView.as_view(), name='list-proy-col'),
 ]

@@ -86,3 +86,9 @@ class ChangeStatusProjectSerializer(serializers.Serializer):
 
 class ListFilesProjectSerializer(serializers.Serializer):
     project = serializers.CharField(max_length=20, allow_blank=False, trim_whitespace=True)
+
+class ListProyectsOwnSerializer(serializers.Serializer):
+    user = serializers.CharField(max_length=20, allow_blank=False, trim_whitespace=True)
+
+class ListProyectsColSerializer(serializers.Serializer):
+    user = serializers.CharField(max_length=20, allow_blank=False, trim_whitespace=True)
