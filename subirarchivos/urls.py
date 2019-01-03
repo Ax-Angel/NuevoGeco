@@ -22,5 +22,7 @@ urlpatterns = [
     url(r'^cambiar-status-proyp', ChangeStatusParallellProjectView.as_view(), name='cambiar-status-proyp'),
     url(r'^list-docs-proy', ListFilesProjectView.as_view(), name='list-docs-proy'),
     url(r'^list-proy-own', ListProyectsOwnView.as_view(), name='list-proy-own'),
-    url(r'^list-proy-col', ListProyectsColView.as_view(), name='list-proy-col'),
+    url(r'^add-collab-proy', AddCollaboratorNormalProjectView.as_view(), name='add-collab-proy'),
+    url(r'^pos-tag-file', PoSTagDocView.as_view(), name='pos-tag-file'),
+    url(r'^download-file', DownloadFileView.as_view(), name='download-file'),
 ]

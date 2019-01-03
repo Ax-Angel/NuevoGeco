@@ -2,7 +2,8 @@ import codecs
 import textract
 from chardet.universaldetector import UniversalDetector
 import os
-
+import freeling
+import sys
 
 DETECTOR = UniversalDetector()
 
@@ -38,3 +39,61 @@ def convert_to_txt(filename):
     else:
         fname = filename.split("/")[-1]
         raise osv.except_osv("Error", u"No se pudo extraer texto del archivo %s"%fname)
+
+def ProcessSentences(ls, out_name):
+    # for each sentence in list
+    with open(out_name, 'a') as file:
+        file.write('Palabra\t'+'Candidatos\t'+'Etiqueta\n')
+        for s in ls :
+            # for each word in sentence
+            for w in s :
+                # print word form  
+                file.write(w.get_form()+"\t")
+                # print possible analysis in word, output lemma and tag
+
+                for a in w :
+                    file.write("("+a.get_lemma()+","+a.get_tag()+")")
+                file.write("\t")
+                #  print analysis selected by the tagger 
+                file.write("("+w.get_lemma()+","+w.get_tag()+")\n")
+ 
+
+def my_maco_options(lang,lpath) :
+    opt = freeling.maco_options(lang);
+    opt.UserMapFile = "";
+    opt.LocutionsFile = lpath + "locucions.dat"; 
+    opt.AffixFile = lpath + "afixos.dat";
+    opt.ProbabilityFile = lpath + "probabilitats.dat"; 
+    opt.DictionaryFile = lpath + "dicc.src";
+    opt.NPdataFile = lpath + "np.dat"; 
+    opt.PunctuationFile = lpath + "../common/punct.dat"; 
+    return opt;
+
+def tagger(file_url, out_name):
+    freeling.util_init_locale("default");
+    ipath = "/usr/local";
+    lpath = ipath + "/share/freeling/" + "es" + "/"
+    tk=freeling.tokenizer(lpath+"tokenizer.dat");
+    sp=freeling.splitter(lpath+"splitter.dat"); 
+    morfo=freeling.maco(my_maco_options("es",lpath));
+    morfo.set_active_options (False,  # UserMap 
+                              True,  # NumbersDetection,  
+                              True,  # PunctuationDetection,   
+                              True,  # DatesDetection,    
+                              True,  # DictionarySearch,  
+                              True,  # AffixAnalysis,  
+                              False, # CompoundAnalysis, 
+                              True,  # RetokContractions,
+                              True,  # MultiwordsDetection,  
+                              True,  # NERecognition,     
+                              False, # QuantitiesDetection,  
+                              True); # ProbabilityAssignment                 
+
+    tagger = freeling.hmm_tagger(lpath+"tagger.dat",True,2)
+    file = open(file_url, "r") 
+    text = file.read()
+    lw = tk.tokenize(text)
+    ls = sp.split(lw)
+    ls = morfo.analyze(ls)
+    ls = tagger.analyze(ls)  
+    ProcessSentences(ls, out_name)

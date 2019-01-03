@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
+from django.http import HttpResponse
 from rest_framework import status
 from django.db import IntegrityError
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -37,7 +38,7 @@ class CreateUserView(APIView):
                 return JsonResponse({"error": "El nombre de usuario o correo ya existe"}, status=status.HTTP_409_CONFLICT)
 
         else:
-            return Response(user_serializer.errors, status=status.HTTP_409_BAD_CONFLICT)
+            return Response(user_serializer.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class NormalProjectView(APIView):
@@ -61,6 +62,41 @@ class NormalProjectView(APIView):
         else:
             print("lalalalala")
             return Response(project_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class AddCollaboratorNormalProjectView(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+    permission_classes = (IsAuthenticated, )
+    def post(self, request, *args, **kwargs):
+        serializer = AddCollaboratorNormalProjectSerializer(data=request.data)
+        if serializer.is_valid():
+            validatedData = serializer.validated_data
+
+            try:
+                projectObj = NormalProject.objects.get(name = str(validatedData['project']))
+            except:
+                return JsonResponse({"error": "El proyecto no fue encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+            try:
+                userObj = User.objects.get(username = str(validatedData['user']))
+            except:
+                return JsonResponse({"error": "El usuario no fue encontrado"}, status=status.HTTP_404_NOT_FOUND)
+            owner = projectObj.get_owner()
+            if request.user == owner:
+                try:
+                    projectObj.project_members.add(userObj)
+                except:
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+                projectObj.project_members.add(userObj)
+                projectObj.set_status_collab(True)
+                projectObj.save()
+                return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+            else:
+                return JsonResponse({"error": "El usuario no tiene permisos para hacer esta accion"}, status=status.HTTP_401_UNAUTHORIZED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 class DocumentView(APIView):
     parser_classes = (MultiPartParser, FormParser)
@@ -94,7 +130,7 @@ class DocumentView(APIView):
                     else:
                         convert_to_utf8(uploaded_file_url)
 
-                    doc = Document(file = uploaded_file_url,
+                    doc = Document(file = filename,
                                         name = filename,
                                         owner = request.user,
                                         project = projectObj,
@@ -506,15 +542,17 @@ class ChangeStatusNormalProjectView(APIView):
             validatedData = ch_status_serializer.validated_data
 
             projectObj = NormalProject.objects.get(name = str(validatedData['project']))
-            owner = projectObj.get_owner().all()
+            owner = projectObj.get_owner()
             if projectObj:
-                if request.user in owner:
+                if request.user == owner:
                     if projectObj.is_public() == True:
-                        projectObj.set_status(False)
-                        return Response(ch_status_serializer, status=status.HTTP_202_ACCEPTED)
+                        projectObj.set_status_public(False)
+                        projectObj.save()
+                        return Response(ch_status_serializer.data, status=status.HTTP_202_ACCEPTED)
                     else:
-                        projectObj.set_status(True)
-                        return Response(ch_status_serializer, status=status.HTTP_202_ACCEPTED)
+                        projectObj.set_status_public(True)
+                        projectObj.save()
+                        return Response(ch_status_serializer.data, status=status.HTTP_202_ACCEPTED)
                 else:
                     return JsonResponse({"error": "El usuario no tiene permiso para realizar esta accion"}, status=status.HTTP_401_UNAUTHORIZED)
             else:
@@ -569,7 +607,7 @@ class ListFilesProjectView(APIView):
             else:
                 return JsonResponse({"error": "El proyecto no fue encontrado"}, status=status.HTTP_404_NOT_FOUND)
         else:
-            return Response(ch_status_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ListProyectsOwnView(APIView):
     parser_classes = (MultiPartParser, FormParser)
@@ -583,32 +621,89 @@ class ListProyectsOwnView(APIView):
 
             if projects:
                 try:
-                    response = [{'name': project.name} for project in projects]
+                    response = [{'name': project.name, 'public': project.public_status, 'collab': project.collab_status} for project in projects]
                     return Response(response, status=status.HTTP_202_ACCEPTED)
                 except:
                     return JsonResponse({"error": "error procesando"}, status.HTTP_404_NOT_FOUND)
             else:
                 return JsonResponse({"name": "null"}, status.HTTP_404_NOT_FOUND)
         else:
-            return Response(ch_status_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class ListProyectsColView(APIView):
+
+class PoSTagDocView(APIView):
     parser_classes = (MultiPartParser, FormParser)
     permission_classes = (IsAuthenticated, )
     def post(self, request, *args, **kwargs):
-        serializer = ListProyectsColSerializer(data=request.data)
+        serializer = PoSTagDocSerializer(data=request.data)
         if serializer.is_valid():
             validatedData = serializer.validated_data
 
-            projects = NormalProject.objects.filter(project_members=request.user).exclude(owner=request.user)
-
-            if projects:
+            try:
+                projectObj = NormalProject.objects.get(name = str(validatedData['project']))
+            except:
+                 return JsonResponse({"error": "El proyecto no fue encontrado"}, status=status.HTTP_404_NOT_FOUND)
+      
+            users = projectObj.get_project_members().all()
+            if request.user in users.all():
                 try:
-                    response = [{'name': project.name} for project in projects]
-                    return Response(response, status=status.HTTP_202_ACCEPTED)
+                    docObj = Document.objects.get(name = str(validatedData['document']), project = projectObj)
                 except:
-                    return JsonResponse({"error": "error procesando"}, status.HTTP_404_NOT_FOUND)
+                    return JsonResponse({"error": "El documento no fue encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+
+                out_name = settings.MEDIA_ROOT+"/"+str(docObj.name)+"_POS.txt"
+                file_url = settings.MEDIA_ROOT+"/"+str(docObj.name)
+                print(out_name)
+                try:
+                    tagger(file_url, out_name)
+                except:
+                    return Response({"error": "error al taggear"}, status=status.HTTP_400_BAD_REQUEST)
+
+                try:
+                    docObj.tagged_doc = out_name
+                    docObj.save()
+                except Exception:
+                    print(traceback.format_exc())
+                    return Response({"error": "asignando el path del document taggeado"}, status=status.HTTP_400_BAD_REQUEST)
+
+                return JsonResponse({"exito": "Taggeo Terminado"},  status=status.HTTP_201_CREATED)
+
+
             else:
-                return JsonResponse({"name": "null"}, status.HTTP_404_NOT_FOUND)
+                return JsonResponse({"error": "El usuario no tiene permiso para realizar esta accion"}, status=status.HTTP_401_UNAUTHORIZED)
+
         else:
-            return Response(ch_status_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class DownloadFileView(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+    permission_classes = (IsAuthenticated, )
+    def post(self, request, *args, **kwargs):
+        serializer = DownloadFileSerializer(data=request.data)
+        if serializer.is_valid():
+            validatedData = serializer.validated_data
+
+            try:
+                projectObj = NormalProject.objects.get(name = str(validatedData['project']))
+            except:
+                 return JsonResponse({"error": "El proyecto no fue encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+            users = projectObj.get_project_members().all()
+            if request.user in users.all():
+                try:
+                    docObj = Document.objects.get(name = str(validatedData['document']), project = projectObj)
+                except:
+                    return JsonResponse({"error": "El documento no fue encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+                file = open(str(docObj.tagged_doc), "r")
+                response = HttpResponse(file)
+                response['Content-Disposition'] = 'attachment; filename=NameOfFile'
+
+                return response
+
+            else:
+                return JsonResponse({"error": "El usuario no tiene permiso para realizar esta accion"}, status=status.HTTP_401_UNAUTHORIZED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
