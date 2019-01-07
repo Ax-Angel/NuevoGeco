@@ -101,3 +101,6 @@ class PoSTagDocSerializer(serializers.Serializer):
 class DownloadFileSerializer(serializers.Serializer):
     project = serializers.CharField(max_length=100, allow_blank=False, trim_whitespace=True)
     document = serializers.CharField(max_length=100, allow_blank=False, trim_whitespace=True)
+
+class GetMDProjectSerializer(serializers.Serializer):
+    project = serializers.CharField(max_length=100, allow_blank=False, trim_whitespace=True)

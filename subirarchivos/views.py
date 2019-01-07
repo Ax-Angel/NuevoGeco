@@ -12,6 +12,7 @@ from django.conf import settings
 import traceback
 import sys
 import os
+import json
 
 from .functions import *
 from .serializers import *
@@ -598,10 +599,16 @@ class ListFilesProjectView(APIView):
                 users = projectObj.get_project_members().all()
                 if request.user in users.all():
                     documents_set = Document.objects.filter(project = projectObj)
-                    documents = []
+                    responseHttp = []
                     for doc in documents_set:
-                        documents.append(doc.name)
-                    return JsonResponse({"Documentos": documents}, status=status.HTTP_202_ACCEPTED)
+                        #documents.append(doc.name)
+                        md_set = DocumentNormalMetadataRelation.objects.filter(document=doc)
+                        li = []
+                        for md in md_set:
+                            li.append(md.data)
+                        response = [{'name': doc.name, 'owner': str(doc.owner), 'metadata': li}]
+                        responseHttp.append(response)
+                    return JsonResponse(responseHttp, status=status.HTTP_202_ACCEPTED, safe=False)
                 else:
                     return JsonResponse({"error": "El usuario no tiene permiso para realizar esta accion"}, status=status.HTTP_401_UNAUTHORIZED)
             else:
@@ -624,9 +631,33 @@ class ListProyectsOwnView(APIView):
                     response = [{'name': project.name, 'public': project.public_status, 'collab': project.collab_status} for project in projects]
                     return Response(response, status=status.HTTP_202_ACCEPTED)
                 except:
-                    return JsonResponse({"error": "error procesando"}, status.HTTP_404_NOT_FOUND)
+                    return JsonResponse({"error": "error procesando"}, status=status.HTTP_404_NOT_FOUND)
             else:
-                return JsonResponse({"name": "null"}, status.HTTP_404_NOT_FOUND)
+                return JsonResponse({"name": "null"}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class GetMDProjectView(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+    permission_classes = (IsAuthenticated, )
+    def post(self, request, *args, **kwargs):
+        serializer = GetMDProjectSerializer(data=request.data)
+        if serializer.is_valid():
+            validatedData = serializer.validated_data
+            try:
+                project = NormalProject.objects.filter(name = validatedData['project'])
+            except:
+                return JsonResponse({"error": "no se encontre el proyecto"}, status=status.HTTP_404_NOT_FOUND)
+
+            try:
+                md = NormalMetadata.objects.filter(project = validatedData['project'])
+            except:
+                return JsonResponse({"error": "no se encontraron metadatos"}, status=status.HTTP_404_NOT_FOUND)
+
+            li = []
+            for m in md:
+                li.append(m)
+            return JsonResponse({'metadata': li})
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
