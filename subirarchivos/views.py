@@ -54,6 +54,8 @@ class NormalProjectView(APIView):
             try:
                 project = NormalProject(owner = request.user,
                                             name = str(validatedData['name']),
+                                            public_status = validatedData['is_public'],
+                                            collab_status = validatedData['is_collab']
                                             )
                 project.save()
                 project.project_members.add(request.user)

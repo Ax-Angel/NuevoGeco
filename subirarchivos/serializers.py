@@ -11,6 +11,8 @@ class CreateUserSerializer(serializers.Serializer):
 class NormalProjectSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=100, allow_blank=False, trim_whitespace=True)
     metadata_list = serializers.ListField(child=serializers.CharField())
+    is_collab = serializers.BooleanField(default=False)
+    is_public = serializers.BooleanField(default=False)
 
 class DocumentSerializer(serializers.Serializer):
     file = serializers.FileField(validators=[validate_file_extension])
