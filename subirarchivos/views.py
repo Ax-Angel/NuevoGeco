@@ -57,6 +57,10 @@ class NormalProjectView(APIView):
                                             )
                 project.save()
                 project.project_members.add(request.user)
+                for md in validatedData['metadata_list']:
+                    meta = NormalMetadata(name=md,
+                                            project=project)
+                    meta.save()
                 return Response(project_serializer.data, status=status.HTTP_201_CREATED)
             except IntegrityError as e:
                 return JsonResponse({"error": "El nombre del proyecto ya existe"}, status=status.HTTP_409_CONFLICT)
@@ -603,10 +607,11 @@ class ListFilesProjectView(APIView):
                     for doc in documents_set:
                         #documents.append(doc.name)
                         md_set = DocumentNormalMetadataRelation.objects.filter(document=doc)
-                        li = []
+                        md_dict = {}
                         for md in md_set:
-                            li.append(md.data)
-                        response = [{'name': doc.name, 'owner': str(doc.owner), 'metadata': li}]
+                            md_dict[md.metadata.name] = str(md.data)
+                            #li.append(md.data)
+                        response = [{'name': doc.name, 'owner': str(doc.owner), 'metadata': md_dict}]
                         responseHttp.append(response)
                     return JsonResponse(responseHttp, status=status.HTTP_202_ACCEPTED, safe=False)
                 else:
@@ -645,18 +650,18 @@ class GetMDProjectView(APIView):
         if serializer.is_valid():
             validatedData = serializer.validated_data
             try:
-                project = NormalProject.objects.filter(name = validatedData['project'])
+                project = NormalProject.objects.get(name = validatedData['project'])
             except:
                 return JsonResponse({"error": "no se encontre el proyecto"}, status=status.HTTP_404_NOT_FOUND)
 
             try:
-                md = NormalMetadata.objects.filter(project = validatedData['project'])
+                md = NormalMetadata.objects.filter(project = project)
             except:
                 return JsonResponse({"error": "no se encontraron metadatos"}, status=status.HTTP_404_NOT_FOUND)
 
             li = []
             for m in md:
-                li.append(m)
+                li.append(m.name)
             return JsonResponse({'metadata': li})
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -738,3 +743,11 @@ class DownloadFileView(APIView):
                 return JsonResponse({"error": "El usuario no tiene permiso para realizar esta accion"}, status=status.HTTP_401_UNAUTHORIZED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class UpdateDocumentView(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+    permission_classes = (IsAuthenticated, )
+    def post(self, request, *args, **kwargs):
+        serializer = UpdateDocumentSerializer(data=request.data)
+        if serializer.is_valid():
+            validatedData = serializer.validated_data

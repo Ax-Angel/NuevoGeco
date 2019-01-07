@@ -7,10 +7,9 @@ class CreateUserSerializer(serializers.Serializer):
     user_name = serializers.CharField(max_length=100, allow_blank=False, trim_whitespace=False)
     password = serializers.CharField(max_length=100, allow_blank=False, trim_whitespace=False)
 
-class NormalProjectSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = NormalProject
-        fields = ('name', )
+class NormalProjectSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=100, allow_blank=False, trim_whitespace=True)
+    metadata_list = serializers.ListField(child=serializers.CharField())
 
 class DocumentSerializer(serializers.Serializer):
     file = serializers.FileField()
@@ -20,6 +19,7 @@ class DocumentSerializer(serializers.Serializer):
 class NormalMetadataSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=100, allow_blank=False, trim_whitespace=True)
     project = serializers.CharField(max_length=30, allow_blank=False, trim_whitespace=False)
+
 
 class ParallelProjectSerializer(serializers.ModelSerializer):
     class Meta:
