@@ -751,3 +751,28 @@ class UpdateDocumentView(APIView):
         serializer = UpdateDocumentSerializer(data=request.data)
         if serializer.is_valid():
             validatedData = serializer.validated_data
+            try:
+                projectObj = NormalProject.objects.get(name = str(validatedData['project']))
+            except:
+                 return JsonResponse({"error": "El proyecto no fue encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+            users = projectObj.get_project_members().all()
+            if request.user in users.all():
+                try:
+                    docObj = Document.objects.get(name = str(validatedData['document']), project = projectObj)
+                except:
+                    return JsonResponse({"error": "El documento no fue encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+                docname = docObj.file
+
+                file_url = settings.MEDIA_ROOT+'/'+docname
+
+                with open(file_url, 'w') as file:
+                    file.write(validatedData['text'])
+                return JsonResponse({"exito": "documento modificado"}, status=status.HTTP_202_ACCEPTED)
+            else:
+                return JsonResponse({"error": "El usuario no tiene permiso para realizar esta accion"}, status=status.HTTP_401_UNAUTHORIZED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+

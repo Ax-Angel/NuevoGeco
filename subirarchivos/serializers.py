@@ -1,6 +1,7 @@
 from rest_framework import serializers
 #from .models import Document, NormalProject, NormalMetadata, ParallelRelation, ParallelProject, ParallelMetadata
 from .models import *
+from .validators import *
 
 class CreateUserSerializer(serializers.Serializer):
     email = serializers.CharField(max_length=255, allow_blank=False, trim_whitespace=True)
@@ -12,7 +13,7 @@ class NormalProjectSerializer(serializers.Serializer):
     metadata_list = serializers.ListField(child=serializers.CharField())
 
 class DocumentSerializer(serializers.Serializer):
-    file = serializers.FileField()
+    file = serializers.FileField(validators=[validate_file_extension])
     project = serializers.CharField(max_length=30, allow_blank=False, trim_whitespace=False)
 
 # Hecho por Diego... Cualquier cosa, avísame.
@@ -104,3 +105,8 @@ class DownloadFileSerializer(serializers.Serializer):
 
 class GetMDProjectSerializer(serializers.Serializer):
     project = serializers.CharField(max_length=100, allow_blank=False, trim_whitespace=True)
+
+class UpdateDocumentSerializer(serializers.Serializer):
+    project = serializers.CharField(max_length=100, allow_blank=False, trim_whitespace=True)
+    document = serializers.CharField(max_length=100, allow_blank=False, trim_whitespace=True)
+    text = serializers.CharField(max_length=1000000, allow_blank=False, trim_whitespace=True)

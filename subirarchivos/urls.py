@@ -26,5 +26,6 @@ urlpatterns = [
     url(r'^pos-tag-file', PoSTagDocView.as_view(), name='pos-tag-file'),
     url(r'^download-file', DownloadFileView.as_view(), name='download-file'),
     url(r'^get-proy-md', GetMDProjectView.as_view(), name='get-proy-md'),
+    url(r'^uptdate-doc', UpdateDocumentView.as_view(), name='update-doc'),
 
 ]
