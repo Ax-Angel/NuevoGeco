@@ -344,6 +344,9 @@ class RemoveNormalProjectView(APIView):
             owner = projectObj.get_owner()
             if request.user == owner:
                 if projectObj is not None:
+                    docs = Document.objects.filter(project=projectObj)
+                    for doc in docs:
+                        doc.delete()
                     projectObj.delete()
                     return Response(rm_project_serializer.data, status=status.HTTP_202_ACCEPTED)
                 else:
@@ -373,7 +376,13 @@ class RemoveDocumentView(APIView):
                 except:
                     return JsonResponse({"error": "El documento no fue encontrado"}, status=status.HTTP_404_NOT_FOUND)
                 if doc is not None:
+                    file_url = serializer.MEDIA_ROOT+"/"+str(doc.file)
+                    try:
+                        os.remove(file_url)
+                    except:
+                        return JsonResponse({"error": "El documento no se pudo eliminar del sistema"}, status=status.HTTP_404_NOT_FOUND)
                     doc.delete()
+
                     return Response(rm_file_serializer.data, status=status.HTTP_202_ACCEPTED)
                 else:
                     return JsonResponse({"error": "El documento no fue encontrado"}, status=status.HTTP_404_NOT_FOUND)

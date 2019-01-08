@@ -46,7 +46,7 @@ class Document(models.Model):
         self.file = file_url
 
 class NormalMetadata(models.Model):
-    name = models.CharField(max_length=100, null=False)
+    name = models.CharField(max_length=100, null=False, unique=True)
     project = models.ForeignKey(NormalProject, related_name='project_normalMetadata', on_delete=models.CASCADE)
 
 class DocumentNormalMetadataRelation(models.Model):
