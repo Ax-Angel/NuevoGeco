@@ -663,7 +663,7 @@ class GetMDProjectView(APIView):
             try:
                 project = NormalProject.objects.get(name = validatedData['project'])
             except:
-                return JsonResponse({"error": "no se encontre el proyecto"}, status=status.HTTP_404_NOT_FOUND)
+                return JsonResponse({"error": "no se encontró el proyecto"}, status=status.HTTP_404_NOT_FOUND)
 
             try:
                 md = NormalMetadata.objects.filter(project = project)
