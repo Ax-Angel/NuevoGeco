@@ -665,15 +665,35 @@ class GetMDProjectView(APIView):
             except:
                 return JsonResponse({"error": "no se encontre el proyecto"}, status=status.HTTP_404_NOT_FOUND)
 
-            try:
-                md = NormalMetadata.objects.filter(project = project)
-            except:
-                return JsonResponse({"error": "no se encontraron metadatos"}, status=status.HTTP_404_NOT_FOUND)
+            users = projectObj.get_project_members().all()
+            if request.user in users.all():
+                try:
+                    md = NormalMetadata.objects.filter(project = project)
+                except:
+                    return JsonResponse({"error": "no se encontraron metadatos"}, status=status.HTTP_404_NOT_FOUND)
 
-            li = []
-            for m in md:
-                li.append(m.name)
-            return JsonResponse({'metadata': li})
+                try:
+                    files = Document.objects.filter(project = project)
+                except:
+                    return JsonResponse({"error": "no se encontraron documentos"}, status=status.HTTP_404_NOT_FOUND)
+
+                li = []
+                f_dict = {}
+                for file in files:
+                    f_dict['file'] = str(file.name)
+                    for m in md:
+                        try:
+                            meta =  DocumentNormalMetadataRelation.objects.get(document = file, metadata = m)
+                            meta_content = meta.data
+                        except DocumentNormalMetadataRelation.DoesNotExist:
+                            meta_content = None
+                        
+                        f_dict[str(m.name)] =  meta_content
+                    li.append(f_dict)
+                    f_dict.clear()
+                return JsonResponse({'result': li}, status=status.HTTP_202_ACCEPTED)
+            else:
+                return JsonResponse({"error": "El usuario no tiene permiso para realizar esta accion"}, status=status.HTTP_401_UNAUTHORIZED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -786,4 +806,35 @@ class UpdateDocumentView(APIView):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+class PushMDView(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+    permission_classes = (IsAuthenticated, )
+    def post(self, request, *args, **kwargs):
+        serializer = DictMetadataPushSerializer(data=request.data)
+        if serializer.is_valid():
+            validatedData = serializer.validated_data
+            try:
+                projectObj = NormalProject.objects.get(name = str(validatedData['project']))
+            except:
+                 return JsonResponse({"error": "El proyecto no fue encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+            users = projectObj.get_project_members().all()
+            if request.user in users.all():
+                try:
+                    document = Document.objects.get(name = str(validatedData['document']), project = projectObj)
+                except:
+                    return JsonResponse({"error": "El documento no fue encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+                for metadata, value in validatedData['metadata'].items():
+                    DocumentNormalMetadataRelation = DocumentNormalMetadataRelation(metadata = metadata,
+                                                                                    document = document,
+                                                                                    data = value,
+                                                                                    )
+                    DocumentNormalMetadataRelation.save()
+
+            else:
+                return JsonResponse({"error": "El usuario no tiene permiso para realizar esta accion"}, status=status.HTTP_401_UNAUTHORIZED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

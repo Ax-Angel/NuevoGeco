@@ -27,5 +27,7 @@ urlpatterns = [
     url(r'^download-file', DownloadFileView.as_view(), name='download-file'),
     url(r'^get-proy-md', GetMDProjectView.as_view(), name='get-proy-md'),
     url(r'^uptdate-doc', UpdateDocumentView.as_view(), name='update-doc'),
+    url(r'^guardar-metadatos-documento', PushMDView.as_view(), name='guardar-metadatos-documento'),
+
 
 ]

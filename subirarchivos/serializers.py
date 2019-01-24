@@ -112,3 +112,10 @@ class UpdateDocumentSerializer(serializers.Serializer):
     project = serializers.CharField(max_length=100, allow_blank=False, trim_whitespace=True)
     document = serializers.CharField(max_length=100, allow_blank=False, trim_whitespace=True)
     text = serializers.CharField(max_length=1000000, allow_blank=False, trim_whitespace=True)
+
+class DictMetadataPushSerializer(serializers.Serializer):
+    project = serializers.CharField(max_length=100, allow_blank=False, trim_whitespace=True)
+    metadata = DictField(child=CharField())
+    document = serializers.CharField(max_length=100, allow_blank=False, trim_whitespace=True)
+    
+    
