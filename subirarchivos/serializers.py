@@ -115,7 +115,7 @@ class UpdateDocumentSerializer(serializers.Serializer):
 
 class DictMetadataPushSerializer(serializers.Serializer):
     project = serializers.CharField(max_length=100, allow_blank=False, trim_whitespace=True)
-    metadata = DictField(child=CharField())
+    metadata = serializers.DictField(child=serializers.CharField())
     document = serializers.CharField(max_length=100, allow_blank=False, trim_whitespace=True)
-    
+
     
