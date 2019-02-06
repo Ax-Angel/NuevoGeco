@@ -41,6 +41,7 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'subirarchivos',
+    'corsheaders',
 
     'common',
     'users',
@@ -77,6 +78,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.BrokenLinkEmailsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
 
 ROOT_URLCONF = 'geco.urls'
@@ -141,6 +145,8 @@ WEBPACK_LOADER = {
         'STATS_FILE': 'jquery-webpack-stats.json',
     }
 }
+
+CORS_ORIGIN_ALLOW_ALL = False
 
 # Celery
 CELERY_ACCEPT_CONTENT = ['json']
