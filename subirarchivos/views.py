@@ -123,26 +123,27 @@ class DocumentView(APIView):
             if request.user in users.all():
                 try:
 
-                    file = validatedData['file']
-                    fs = FileSystemStorage()
-                    filename = fs.save(file.name, file)
-                    uploaded_file_url = settings.MEDIA_ROOT+'/'+filename
-                    print(uploaded_file_url)
+                    files = validatedData['files']
+                    for file in files:
+                        fs = FileSystemStorage()
+                        filename = fs.save(file.name, file)
+                        uploaded_file_url = settings.MEDIA_ROOT+'/'+filename
+                        print(uploaded_file_url)
 
-                    if str(filename).endswith('.pdf'):
-                        convert_to_utf8(uploaded_file_url)
-                        convert_to_txt(uploaded_file_url)
-                        os.remove(uploaded_file_url)
-                        filename = filename + ".txt"
-                    else:
-                        convert_to_utf8(uploaded_file_url)
+                        if str(filename).endswith('.pdf'):
+                            convert_to_utf8(uploaded_file_url)
+                            convert_to_txt(uploaded_file_url)
+                            os.remove(uploaded_file_url)
+                            filename = filename + ".txt"
+                        else:
+                            convert_to_utf8(uploaded_file_url)
 
-                    doc = Document(file = filename,
-                                        name = filename,
-                                        owner = request.user,
-                                        project = projectObj,
+                        doc = Document(file = filename,
+                                            name = filename,
+                                            owner = request.user,
+                                            project = projectObj,
 
-                                        )
+                                            )
                     try:
                         doc.save()
                         return Response(file_serializer.data, status=status.HTTP_201_CREATED)
@@ -687,7 +688,7 @@ class GetMDProjectView(APIView):
                             meta_content = meta.data
                         except DocumentNormalMetadataRelation.DoesNotExist:
                             meta_content = None
-                        
+
                         f_dict[str(m.name)] =  meta_content
                     li.append(f_dict)
                     f_dict.clear()
@@ -710,7 +711,7 @@ class PoSTagDocView(APIView):
                 projectObj = NormalProject.objects.get(name = str(validatedData['project']))
             except:
                  return JsonResponse({"error": "El proyecto no fue encontrado"}, status=status.HTTP_404_NOT_FOUND)
-      
+
             users = projectObj.get_project_members().all()
             if request.user in users.all():
                 try:

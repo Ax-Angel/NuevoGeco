@@ -15,7 +15,7 @@ class NormalProjectSerializer(serializers.Serializer):
     is_public = serializers.BooleanField(default=False)
 
 class DocumentSerializer(serializers.Serializer):
-    file = serializers.FileField(validators=[validate_file_extension])
+    files = serializers.ListField(child = serializers.FileField(validators=[validate_file_extension]))
     project = serializers.CharField(max_length=30, allow_blank=False, trim_whitespace=False)
 
 # Hecho por Diego... Cualquier cosa, avísame.
@@ -118,4 +118,4 @@ class DictMetadataPushSerializer(serializers.Serializer):
     metadata = serializers.DictField(child=serializers.CharField())
     document = serializers.CharField(max_length=100, allow_blank=False, trim_whitespace=True)
 
-    
+
